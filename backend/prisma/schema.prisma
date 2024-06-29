@@ -1,14 +1,91 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model food {
+  id        Int        @id @default(autoincrement())
+  name      String
+  calories  Float
+  protein   Float
+  fat       Float
+  carbs     Float
+  vitamins  String?
+  minerals  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  mealfood  mealfood[]
+}
+
+model meal {
+  id         Int        @id @default(autoincrement())
+  mealPlanId Int
+  name       String
+  date       DateTime
+  mealplan   mealplan   @relation(fields: [mealPlanId], references: [id], map: "Meal_mealPlanId_fkey")
+  mealfood   mealfood[]
+
+  @@index([mealPlanId], map: "Meal_mealPlanId_fkey")
+}
+
+model mealfood {
+  id     Int  @id @default(autoincrement())
+  mealId Int
+  foodId Int
+  food   food @relation(fields: [foodId], references: [id], map: "MealFood_foodId_fkey")
+  meal   meal @relation(fields: [mealId], references: [id], map: "MealFood_mealId_fkey")
+
+  @@unique([mealId, foodId], map: "MealFood_mealId_foodId_key")
+  @@index([foodId], map: "MealFood_foodId_fkey")
+}
+
+model mealplan {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  type      mealplan_type
+  createdAt DateTime      @default(now())
+  updatedAt DateTime
+  meal      meal[]
+  user      user          @relation(fields: [userId], references: [id], map: "MealPlan_userId_fkey")
+
+  @@index([userId], map: "MealPlan_userId_fkey")
+}
+
+model profile {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @unique(map: "Profile_userId_key")
+  age                Int?
+  gender             String?
+  weight             Float?
+  height             Float?
+  dietaryPreferences String?
+  allergies          String?
+  healthGoals        String?
+  updatedAt          DateTime
+  user               user     @relation(fields: [userId], references: [id], map: "Profile_userId_fkey")
+}
+
+model user {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique(map: "User_email_key")
+  password  String
+  role      user_role
+  createdAt DateTime   @default(now())
+  mealplan  mealplan[]
+  profile   profile?
+}
+
+enum mealplan_type {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum user_role {
+  USER
+  ADMIN
 }
