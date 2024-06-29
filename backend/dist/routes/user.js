@@ -16,6 +16,7 @@ const express_1 = require("express");
 const connection_1 = __importDefault(require("../connection"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const inputs_1 = require("../inputs");
+const middleware_1 = require("../middleware");
 const JWT_SECRET = "secretKey";
 const router = (0, express_1.Router)();
 router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -39,6 +40,8 @@ router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function*
     ;
     const user = yield connection_1.default.user.create({
         data: {
+            firstName: parsedInputs.data.firstName,
+            lastName: parsedInputs.data.lastName,
             email: parsedInputs.data.email,
             password: parsedInputs.data.password,
             role: "USER"
@@ -46,7 +49,7 @@ router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function*
     });
     return res.status(200).json({
         message: "user created successfully",
-        token: jsonwebtoken_1.default.sign(user.email, JWT_SECRET)
+        token: jsonwebtoken_1.default.sign(String(user.id), JWT_SECRET)
     });
 }));
 router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -71,7 +74,43 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     ;
     return res.status(200).json({
         message: "login successful",
-        token: jsonwebtoken_1.default.sign(user.email, JWT_SECRET)
+        token: jsonwebtoken_1.default.sign(String(user.id), JWT_SECRET)
+    });
+}));
+router.post("/updateprofile", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //@ts-ignore
+    const userId = req.userId;
+    console.log(userId);
+    const body = req.body;
+    const parsedInputs = inputs_1.userDetails.partial().safeParse(body);
+    if (!parsedInputs.success) {
+        return res.status(411).json({
+            message: "enter valid inputs"
+        });
+    }
+    const data = {};
+    if (parsedInputs.data.age !== undefined)
+        data.age = parsedInputs.data.age;
+    if (parsedInputs.data.gender !== undefined)
+        data.gender = parsedInputs.data.gender;
+    if (parsedInputs.data.weight !== undefined)
+        data.weight = parsedInputs.data.weight;
+    if (parsedInputs.data.height !== undefined)
+        data.height = parsedInputs.data.height;
+    if (parsedInputs.data.dietaryPreferences !== undefined)
+        data.dietaryPreferences = parsedInputs.data.dietaryPreferences;
+    if (parsedInputs.data.allergies !== undefined)
+        data.allergies = parsedInputs.data.allergies;
+    if (parsedInputs.data.healthGoals !== undefined)
+        data.healthGoals = parsedInputs.data.healthGoals;
+    const updateUser = yield connection_1.default.user.update({
+        where: {
+            id: Number(userId)
+        },
+        data: data
+    });
+    return res.status(411).json({
+        message: "update successful"
     });
 }));
 exports.default = router;

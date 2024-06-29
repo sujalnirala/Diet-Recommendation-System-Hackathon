@@ -6,58 +6,39 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
-model food {
-  id        Int        @id @default(autoincrement())
-  name      String
-  calories  Float
-  protein   Float
-  fat       Float
-  carbs     Float
-  vitamins  String?
-  minerals  String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime
-  mealfood  mealfood[]
+model Food {
+  id            Int      @id @default(autoincrement())
+  name          String
+  calories      Float
+  protein       Float
+  fat           Float
+  carbs         Float
+  vitamins      String
+  minerals      String
+  havePeanuts   Boolean
+  haveSesame    Boolean
+  haveGluten    Boolean
+  isVeg         Boolean
+  isNonVeg      Boolean
+  forWeightLoss Boolean
+  forWeightGain Boolean
+  mealId        Int
+  meal          Meal @relation(fields: [mealId], references: [id])
 }
 
-model meal {
-  id         Int        @id @default(autoincrement())
-  mealPlanId Int
+model Meal {
+  id         Int       @id @default(autoincrement())
   name       String
-  date       DateTime
-  mealplan   mealplan   @relation(fields: [mealPlanId], references: [id], map: "Meal_mealPlanId_fkey")
-  mealfood   mealfood[]
-
-  @@index([mealPlanId], map: "Meal_mealPlanId_fkey")
+  foods      Food[]    // List of foods directly associated with the meal
 }
 
-model mealfood {
-  id     Int  @id @default(autoincrement())
-  mealId Int
-  foodId Int
-  food   food @relation(fields: [foodId], references: [id], map: "MealFood_foodId_fkey")
-  meal   meal @relation(fields: [mealId], references: [id], map: "MealFood_mealId_fkey")
-
-  @@unique([mealId, foodId], map: "MealFood_mealId_foodId_key")
-  @@index([foodId], map: "MealFood_foodId_fkey")
-}
-
-model mealplan {
-  id        Int           @id @default(autoincrement())
-  userId    Int
-  type      mealplan_type
-  createdAt DateTime      @default(now())
-  updatedAt DateTime
-  meal      meal[]
-  user      user          @relation(fields: [userId], references: [id], map: "MealPlan_userId_fkey")
-
-  @@index([userId], map: "MealPlan_userId_fkey")
-}
-
-model profile {
-  id                 Int      @id @default(autoincrement())
-  userId             Int      @unique(map: "Profile_userId_key")
+model User {
+  id                 Int        @id @default(autoincrement())
+  firstName          String
+  lastName           String
+  email              String     @unique
+  password           String
+  role               String
   age                Int?
   gender             String?
   weight             Float?
@@ -65,25 +46,29 @@ model profile {
   dietaryPreferences String?
   allergies          String?
   healthGoals        String?
-  updatedAt          DateTime
-  user               user     @relation(fields: [userId], references: [id], map: "Profile_userId_fkey")
 }
 
-model user {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique(map: "User_email_key")
-  password  String
-  role      user_role
-  createdAt DateTime   @default(now())
-  mealplan  mealplan[]
-  profile   profile?
-}
+// enum Allergy {
+//   PEANUTS
+//   SESAME
+//   GLUTEN
+// }
 
-enum mealplan_type {
-  DAILY
-  WEEKLY
-  MONTHLY
-}
+// enum dietaryPreferences_type {
+//   Vegetarian
+//   NonVegetarian
+// }
+
+// enum HealthGoal {
+//   WEIGHT_LOSS
+//   WEIGHT_GAIN
+// }
+
+// enum mealplan_type {
+//   DAILY
+//   WEEKLY
+//   MONTHLY
+// }
 
 enum user_role {
   USER
